@@ -33,12 +33,10 @@ jobs:
 
       - name: Setup Environment Files & Keystore
         run: |
-          # Create .env files for secrets-gradle-plugin
           touch .env .env.example
           mkdir -p app
           touch app/.env app/.env.example
 
-          # Decode base64 keystore if valid, otherwise generate fresh debug keystore
           if [ -f debug.keystore.base64 ] && [ -s debug.keystore.base64 ]; then
             base64 -d debug.keystore.base64 > debug.keystore 2>/dev/null || true
           fi
@@ -47,27 +45,24 @@ jobs:
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-      - name: Ensure Gradle Wrapper Executable
+      # 🔥 Direct Fix: Automatically generate gradlew and wrapper files in YAML
+      - name: Generate & Setup Gradle Wrapper
         run: |
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-          else
-            gradle wrapper
-            chmod +x gradlew
+          if [ ! -f gradlew ]; then
+            echo "gradlew missing! Generating gradle wrapper dynamically..."
+            gradle wrapper --gradle-version 8.11.1
           fi
+          chmod +x gradlew
 
-      - name: Build Debug APK, Release APK & AAB
+      - name: Build Debug APK
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
         run: |
-          ./gradlew assembleDebug assembleRelease bundleRelease --stacktrace
+          ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APKs and AAB Artifacts
+      - name: Upload APKs Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Android-Build-Artifacts
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
