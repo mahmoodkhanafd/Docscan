@@ -1,0 +1,6 @@
+{
+  "name": "DocScan: PDF & CamScanner",
+  "description": "Smart document camera scanner, ML Kit OCR text extractor, universal document reader, and offline PDF tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon Foreground Asset: docicon_512x512.png (512x512 px PNG or Vector) -->
+<!-- Safe central content viewport size: 66dp x 66dp (264x264 px @ xxhdpi) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="66dp"
+        android:height="66dp"
+        android:drawable="@drawable/docicon_512x512"
+        android:gravity="center" />
+</layer-list>
