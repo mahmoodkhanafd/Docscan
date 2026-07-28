@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Android APK & AAB
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -24,43 +24,36 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
 
       - name: Accept Android SDK Licenses
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Setup Environment Files & Keystore
+      - name: Setup Environment Files & Properties
         run: |
+          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          touch secrets.properties
           touch .env .env.example
           mkdir -p app
           touch app/.env app/.env.example
-
-          if [ -f debug.keystore.base64 ] && [ -s debug.keystore.base64 ]; then
-            base64 -d debug.keystore.base64 > debug.keystore 2>/dev/null || true
-          fi
 
           if [ ! -f debug.keystore ] || [ ! -s debug.keystore ]; then
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-      # 🔥 Direct Fix: Automatically generate gradlew and wrapper files in YAML
-      - name: Generate & Setup Gradle Wrapper
+      - name: Generate Gradle Wrapper
         run: |
           if [ ! -f gradlew ]; then
-            echo "gradlew missing! Generating gradle wrapper dynamically..."
-            gradle wrapper --gradle-version 8.11.1
+            gradle wrapper
           fi
           chmod +x gradlew
 
       - name: Build Debug APK
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m"
         run: |
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --no-daemon --no-configuration-cache --stacktrace
 
-      - name: Upload APKs Artifacts
+      - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Android-Build-Artifacts
